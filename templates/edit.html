@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Transaction | FinanceFlow{% endblock %}
+
+{% block content %}
+<section class="edit-shell">
+    <a class="back-link" href="{{ url_for('home') }}">← Back to dashboard</a>
+    <article class="panel edit-panel">
+        <p class="eyebrow">UPDATE RECORD</p>
+        <h1>Edit transaction</h1>
+        <form class="transaction-form" method="POST">
+            <label>
+                Description
+                <input type="text" name="description" maxlength="80" value="{{ transaction['description'] }}" required>
+            </label>
+
+            <div class="form-row">
+                <label>
+                    Amount
+                    <input type="number" name="amount" min="0.01" step="0.01" value="{{ transaction['amount'] }}" required>
+                </label>
+                <label>
+                    Type
+                    <select name="type" required>
+                        <option value="Income" {% if transaction['type'] == 'Income' %}selected{% endif %}>Income</option>
+                        <option value="Expense" {% if transaction['type'] == 'Expense' %}selected{% endif %}>Expense</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="form-row">
+                <label>
+                    Category
+                    <select name="category" required>
+                        {% for category in categories %}
+                            <option value="{{ category }}" {% if transaction['category'] == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Date
+                    <input type="date" name="transaction_date" value="{{ transaction['transaction_date'] }}" required>
+                </label>
+            </div>
+
+            <button class="button button-primary full-width" type="submit">Save changes</button>
+        </form>
+    </article>
+</section>
+{% endblock %}

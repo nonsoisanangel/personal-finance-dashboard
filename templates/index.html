@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}FinanceFlow Dashboard{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">OVERVIEW</p>
+        <h1>Your money, clearly organized.</h1>
+        <p class="hero-copy">Track income and expenses, understand your spending, and keep your balance in view.</p>
+    </div>
+    <button class="button button-primary" type="button" data-open-modal>Add transaction</button>
+</section>
+
+<section class="summary-grid" aria-label="Financial summary">
+    <article class="summary-card income-card">
+        <span>Total income</span>
+        <strong>{{ total_income|money }}</strong>
+        <small>All recorded income</small>
+    </article>
+    <article class="summary-card expense-card">
+        <span>Total expenses</span>
+        <strong>{{ total_expenses|money }}</strong>
+        <small>All recorded expenses</small>
+    </article>
+    <article class="summary-card balance-card">
+        <span>Current balance</span>
+        <strong class="{% if balance < 0 %}negative{% endif %}">{{ balance|money }}</strong>
+        <small>Income minus expenses</small>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel chart-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">INSIGHTS</p>
+                <h2>Expenses by category</h2>
+            </div>
+        </div>
+        {% if chart_values %}
+            <div class="chart-wrap">
+                <canvas id="expenseChart" aria-label="Expense category chart"></canvas>
+            </div>
+            <script id="chart-data" type="application/json">{{ {"labels": chart_labels, "values": chart_values}|tojson }}</script>
+        {% else %}
+            <div class="empty-state compact">
+                <span class="empty-icon">◎</span>
+                <p>Add an expense to see your spending chart.</p>
+            </div>
+        {% endif %}
+    </article>
+
+    <article class="panel quick-add">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">QUICK ADD</p>
+                <h2>New transaction</h2>
+            </div>
+        </div>
+        {% include "transaction_form.html" %}
+    </article>
+</section>
+
+<section class="panel transactions-panel">
+    <div class="panel-heading transactions-heading">
+        <div>
+            <p class="eyebrow">ACTIVITY</p>
+            <h2>Transaction history</h2>
+        </div>
+        <span class="record-count">{{ transactions|length }} record{% if transactions|length != 1 %}s{% endif %}</span>
+    </div>
+
+    <form class="filter-bar" method="GET" action="{{ url_for('home') }}">
+        <label>
+            <span class="sr-only">Search descriptions</span>
+            <input type="search" name="search" value="{{ search }}" placeholder="Search descriptions...">
+        </label>
+        <label>
+            <span class="sr-only">Filter by type</span>
+            <select name="type">
+                <option value="All">All types</option>
+                <option value="Income" {% if selected_type == 'Income' %}selected{% endif %}>Income</option>
+                <option value="Expense" {% if selected_type == 'Expense' %}selected{% endif %}>Expense</option>
+            </select>
+        </label>
+        <label>
+            <span class="sr-only">Filter by category</span>
+            <select name="category">
+                <option value="All">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button class="button button-secondary" type="submit">Apply</button>
+        <a class="clear-link" href="{{ url_for('home') }}">Clear</a>
+    </form>
+
+    {% if transactions %}
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th class="amount-column">Amount</th>
+                        <th><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                        <tr>
+                            <td class="date-cell">{{ transaction['transaction_date'] }}</td>
+                            <td class="description-cell">{{ transaction['description'] }}</td>
+                            <td><span class="category-pill">{{ transaction['category'] }}</span></td>
+                            <td><span class="type-pill type-{{ transaction['type']|lower }}">{{ transaction['type'] }}</span></td>
+                            <td class="amount-column {% if transaction['type'] == 'Expense' %}expense-amount{% else %}income-amount{% endif %}">
+                                {% if transaction['type'] == 'Expense' %}-{% else %}+{% endif %}{{ transaction['amount']|money }}
+                            </td>
+                            <td class="actions-cell">
+                                <a class="icon-button" href="{{ url_for('edit_transaction', transaction_id=transaction['id']) }}" aria-label="Edit {{ transaction['description'] }}">Edit</a>
+                                <form method="POST" action="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}" onsubmit="return confirm('Delete this transaction?');">
+                                    <button class="icon-button danger" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">$</span>
+            <h3>No transactions found</h3>
+            <p>Add your first transaction or change the active filters.</p>
+        </div>
+    {% endif %}
+</section>
+
+<dialog id="transactionModal" class="modal">
+    <div class="modal-header">
+        <div>
+            <p class="eyebrow">NEW RECORD</p>
+            <h2>Add transaction</h2>
+        </div>
+        <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button>
+    </div>
+    {% include "transaction_form.html" %}
+</dialog>
+{% endblock %}
