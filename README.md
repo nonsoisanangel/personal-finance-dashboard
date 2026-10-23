@@ -72,11 +72,10 @@ git init
 git add .
 git commit -m "Build personal finance dashboard"
 git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/personal-finance-dashboard.git
+git remote add origin https://github.com/nonsoisanangel/personal-finance-dashboard.git
 git push -u origin main
 ```
 
-Replace `YOUR-USERNAME` with your GitHub username.
 
 ## Resume description
 
